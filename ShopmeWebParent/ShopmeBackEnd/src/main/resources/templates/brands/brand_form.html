@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" >
+<head th:replace="fragments :: page_head('Brands - Shopme Admin','none')"/>
+<body>
+	<div class="container-fluid">
+		<div th:replace="navigation::menu"></div>
+		<div>
+			<h2 class="text-center">[[${pageTitle}]]</h2>
+		</div>
+		<form th:action="@{/brands/save}" method="post" th:object="${brand}" style="max-width: 700px; margin:0 auto"
+		 onsubmit="return checkNameUnique(this);" enctype="multipart/form-data">
+		 <input type="hidden" th:field="*{id}" />
+			<div class="border border-secondery rounded p-3">
+				<div class="form-group row">
+					<label class="col-sm-4 col-form-label"> Brand Name:</label>
+					<div class="col-sm-8">
+						<input type="text" class="form-control" th:field="*{name}" required minlength="3" maxlength="125" />
+					</div>
+				</div>
+				
+				
+				<div class="form-group row">
+					<label class="col-sm-4 col-form-label">Logo:</label>
+					<div class="col-sm-8">
+						<input type="hidden" th:field="*{logo}"/>
+						<input type="file" id="fileImage" name="fileImage" accept="image/png,image/jpeg" class="mb-2" required/>
+						<div class="mt-2">
+							<img  id ="thumbnail" alt="image preview" th:src="@{${brand.logoImagePath}}" 
+							class="img-fluid">
+						</div>
+						
+						
+					</div>
+				</div>
+				<div class="form-group row">
+					<label class="col-sm-4 col-form-label">Select one or more categories  
+					:</label>
+					<div class="col-sm-8">
+						<select class="form-controll" th:field="*{categories}"
+						 multiple required style="resize: vertical; height: 200px">
+							
+							<th:block th:each="cate : ${listCategories}">
+							<option th:value ="${cate.id}">[[${cate.name}]]</option>
+							</th:block>
+						</select>
+						 
+					</div>
+				</div>
+			
+				<div class="form-group row" >
+					<label class="col-sm-4 col-form-label"> Chosen categories:</label>
+					<div class="col-sm-8">
+						
+						<div id="chosenCategories"></div>
+					</div>
+				</div>
+				
+									
+				<div class="text-center">
+					<input type="submit" value="Save" class="btn btn-primary m-3"  />
+					<input type="Button" value="Cancel" class="btn btn-secondary" id="buttonCancel" />
+				</div>
+			</div>
+		</form>
+		<div class ="modal fade text-center" id="modalDialog"> 
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h4 class="modal-title" id="modalTitle">Warning</h4>
+						<button type="button" class="close" data-dismiss="modal">&times;</button>
+					</div>
+					<div class="modal-body">
+						<span id="modalBody"></span>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div th:replace="fragments ::footer"></div>
+	</div>
+	<script type="text/javascript">
+		MAX_FILE_SIZE = 102400;
+		modulURL="[[@{/brands}]]";
+		$(document).ready(function(){
+			dropdownCategories = $("#categories");
+			divChosenCategories = $("#chosenCategories");
+			dropdownCategories.change(function(){
+				divChosenCategories.empty();
+				showChosenCategories();
+			});
+			showChosenCategories();
+		});
+		
+	function showChosenCategories(){
+		dropdownCategories.children("option:selected").each(function(){
+			selectedCategory = $(this);
+			catId= selectedCategory.val();
+			cateName = selectedCategory.text().replace(/-/g,"");
+			divChosenCategories.append("<span class='badge badge-secondary mt-1'>" +cateName +"</span>");
+		});
+	}	
+	
+		
+		
+	function checkNameUnique(form){
+			url="[[@{/brands/check_name}]]";
+			brandId= $("#id").val();
+			brandName = $("#name").val();
+			csrfValue= $("input[name='_csrf']").val();
+			params= {id: brandId, name: brandName, _csrf: csrfValue};
+			
+			$.post(url,params,function(response){
+				if(response=="OK"){
+					
+					form.submit();
+				}else if(response=="Duplicated"){
+					showModalDialog("Warning","There is another brand having the name " + brandName);
+				}else {
+					showModalDialog("Error","Unknown response from server");
+					};
+				
+				}).fail(function(){
+					showModalDialog("Error","Could not connect to the server");
+				});
+			
+			return false;
+		}
+		
+		function showModalDialog(title,message){
+			$("#modalTitle").text(title);
+			$("#modalBody").text(message);
+			$("#modalDialog").modal();
+		}
+		
+</script>
+<script th:src="@{/js/common_form.js}"></script>
+</body>
+
+</html>

@@ -1,0 +1,22 @@
+orders_details_modal.html<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+	
+		<div th:fragment = "price_fragment(productPrice)" th:remove="tag">
+			<span >
+				<span th:if="${CURRENCY_SYMBOL_POSITION == 'Before price'}" th:remove="tag">[[${CURRENCY_SYMBOL}]]</span>
+				[[${#numbers.formatDecimal(productPrice,1, THOUSANDS_POINT_TYPE, DECIMAL_DIGITS, DECIMAL_POINT_TYPE)}]]
+				<span th:if="${CURRENCY_SYMBOL_POSITION == 'After price'}" th:remove="tag">[[${CURRENCY_SYMBOL}]]</span>
+			</span>
+		</div>
+		
+		<div th:fragment = "format_time(dateTime)" th:remove="tag">
+			<span th:text="${#dates.format(dateTime, 'dd-MM-yyyy HH:mm:ss')}"></span>
+		</div>
+		
+		<div th:fragment = "format_input(amount)" th:remove="tag">
+			<input type="text" class="form-control" readonly  th:value="${(CURRENCY_SYMBOL_POSITION == 'Before price'? CURRENCY_SYMBOL : '') + #numbers.formatDecimal(amount,1, THOUSANDS_POINT_TYPE, DECIMAL_DIGITS, DECIMAL_POINT_TYPE) + (CURRENCY_SYMBOL_POSITION == 'After price' ? CURRENCY_SYMBOL : '')}">
+		</div>
+
+</body>
+</html>

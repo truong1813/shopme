@@ -1,0 +1,198 @@
+
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+	  xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity5">
+<head th:replace="fragments :: page_head('Order - Shoppme Admin', 'none')"/>
+<body>
+	<div class="container-fluid">
+		<div th:replace="navigation::menu">
+		</div>
+		&nbsp;
+		<div>
+			
+			<a class="fa-solid fa-file-csv fa-2x" th:href="@{/orders/export/csv}"></a>
+			&nbsp;|&nbsp;
+			<a class="fa-solid fa-file-excel fa-2x" th:href="@{/orders/export/excel}"></a>
+			&nbsp;|&nbsp;
+			<a class="fa-solid fa-file-pdf fa-2x" th:href="@{/orders/export/pdf}"></a>
+			
+		</div>
+		
+		<div th:if="${message !=null}" class="alert alert-success text-center">
+			[[${message}]]
+		</div>
+		
+		<div>
+			<form th:action="@{/orders/page/1}" class="form-inline m-3" id="searchForm">
+				<input type="hidden" name="sortField" th:value="${sortField}"/>
+				<input type="hidden" name="sortDir" th:value="${sortDir}"/>
+								
+				<input type="search" name="keyword" th:value="${keyword}" class="form-control" required />
+				&nbsp;&nbsp;
+				<button type="submit" class="btn btn-primary">
+					<i class= "fas fa-search"></i>
+				</button>
+				
+				&nbsp;&nbsp;
+				<button type="button" value="Clear" class="btn btn-primary" onclick="clearFilter()">
+					<i class="fas fa-eraser"></i>
+				</button>
+				
+			</form>
+		</div>
+		
+		<div class="full-details" >
+			<table class="table table-bordered table-striped table-hover table-responsive-xl">
+				<thead class="thead-dark">
+					<tr>				
+						<th th:replace="fragments :: column_link('id', 'ID','none')"/>
+						<th th:replace="fragments :: column_link('customer', 'Customer','none')"/>
+						<th th:replace="fragments :: column_link('total', 'Total','none')"/>
+						<th th:replace="fragments :: column_link('orderTime', 'Order Time','none')"/>
+						
+						<th class="hideable-column">
+						<th th:replace="fragments :: column_link('destination', 'Destination','tag')"/>
+						</th>
+						
+						<th class="hideable-column">
+						<th th:replace="fragments :: column_link('patmentMethod', 'Payment Method','tag')"/>
+						</th>
+						
+						<th class="hideable-column">
+						<th th:replace="fragments :: column_link('status', 'Status','tag')"/>					
+						</th>
+						<th></th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr th:each="order :${listOrders}">
+						<td >[[${order.id}]]</td>
+						<td >
+							<a class="linkCustomerDetail" th:href="@{'/customers/detail/' + ${order.customer.id}}">
+								[[${order.customer.fullName}]]
+							</a>
+						</td>
+						<td ><div th:replace = "price_fragment::price_fragment(${order.total})"></div></td>
+						<td ><div th:replace = "price_fragment::format_time(${order.orderTime})"></div></td>
+						<td class="hideable-column" >[[${order.destination}]]</td>
+						<td class="hideable-column">[[${order.paymentMethod}]]</td>
+						<td class="hideable-column">[[${order.status}]]</td>											
+						
+						<td>
+							<a class="fas fa-file-alt fa-2x icon-green linkOrderDetail " th:href="@{'/orders/detail/' +${order.id}}" title="View details of this order" ></a>
+							&nbsp;
+							<a class="fa-solid fa-pen-to-square fa-2x icon-green" th:href="@{'/orders/edit/' +${order.id}}" title="Edit this order"></a>
+							&nbsp;
+							<a class="fa-solid fa-trash fa-2x icon-dark link-delete" 
+								th:href="@{'/orders/delete/' +${order.id}}"
+								th:orderId="${order.id}" title="Delete this order"></a>
+						</td>
+					</tr>
+					
+				</tbody>
+			</table>
+		</div>
+		<div class="less-details">
+			<th:block th:each="order :${listOrders}">
+			<div class="row m-1">
+				<div class="col-2">
+					[[${order.id}]]
+				</div>
+				<div class="col-10">
+					<div>[[${order.customer.fullName}]], [[${order.state}]]</div>
+					<div><small>[[${#dates.format(order.orderTime, "dd-MM-yyyy HH:mm:ss")}]] - [[${order.status}]] </small></div>
+					<div><div th:replace = "price_fragment::price_fragment(${order.total})">Total</div>- [[${order.paymentMethod}]]</div>
+					<div>
+						<a class="fas fa-file-alt fa-2x icon-green linkOrderDetail " th:href="@{'/orders/detail/' +${order.id}}" title="View details of this order" ></a>
+							&nbsp;
+						<a class="fa-solid fa-pen-to-square fa-2x icon-green" th:href="@{'/orders/edit/' +${order.id}}" title="Edit this order"></a>
+							&nbsp;
+						<a class="fa-solid fa-trash fa-2x icon-dark link-delete" th:href="@{'/orders/delete/' +${order.id}}" th:orderId="${order.id}" title="Delete this order"></a>
+					</div>
+				</div>
+			</div>
+			<div>&nbsp;</div>
+			</th:block>
+		</div>
+	
+	<div class="text-center m-1" th:if="${totalItems>0}">
+		<span>Show order # [[${startCount}]] to [[${endCount}]] of [[${totalItems}]]</span>
+	</div>
+	<div class="text-center m-1" th:unless="${totalItems>0}">
+		<span>Not orders found</span>
+	</div>
+	<div th:if="${totalPages >0}">
+		<nav aria-label="Page navigation example">
+  			<ul class="pagination justify-content-center flex-wrap">
+  				<li th:class="${currentPage >1 ? 'page-item':'page-item disabled'}" >
+	    			<a th:replace="fragments ::page_link(1,'First')"></a>
+	    		</li>
+	    		<li th:class="${currentPage > 1 ? 'page-item':'page-item disabled'}" >
+	    			<a th:replace="fragments ::page_link(${currentPage-1},'Previous')"></a>
+	    		</li>
+	    		<li th:class="${currentPage !=i ?'page-item':'page-item active'}" 
+	    			th:each="i: ${#numbers.sequence(1,totalPages)}">
+	    			<a th:replace="fragments ::page_link(${i},${i})"></a>
+	    		</li>
+	    		
+	    		<li th:class="${currentPage<totalPages ? 'page-item':'page-item disabled'}" >
+	    			<a th:replace="fragments ::page_link(${currentPage+1},'Next')"></a>
+	    		</li>
+	    		<li th:class="${currentPage< totalPages ? 'page-item':'page-item disabled'}">
+	    			<a th:replace="fragments ::page_link(${totalPages},'Last')"></a>
+	    		</li>
+  			</ul>
+		</nav>
+	</div>
+		<div th:replace="modal_fragments::confirm_modal"></div>
+		
+		<div class="modal fade" id="detailModal">
+			<div class="modal-dialog modal-xl">
+				<div class="modal-content">
+				
+				</div>
+			</div>
+		</div>
+		
+		<div th:replace="fragments ::footer"></div>
+	</div>
+	
+	<script type="text/javascript">
+	
+		$(document).ready(function(){
+			
+			handleLinkViewCustomerDetails();
+			handleLinkViewOrderDetails();						
+			$(".link-delete").on("click",function(e){
+				e.preventDefault();
+				link=$(this);
+				orderId =link.attr("orderId");
+				$("#yesButton").attr("href",link.attr("href"));
+				$("#confirmText").text("Are you sure you want to delete this order id " + orderId);
+				$("#confirmModal").modal();
+			});
+			
+			
+		});
+		function clearFilter(){
+			window.location = "[[@{/orders}]]";
+		}
+		
+		function handleLinkViewCustomerDetails(){
+			$(".linkCustomerDetail").on("click", function(e){
+				e.preventDefault();
+				linkDetailURL  = $(this).attr("href");
+				$("#detailModal").modal("show").find(".modal-content").load(linkDetailURL);
+			});
+		}
+		function handleLinkViewOrderDetails(){
+			$(".linkOrderDetail").on("click", function(e){
+				e.preventDefault();
+				linkDetailURL  = $(this).attr("href");
+				$("#detailModal").modal("show").find(".modal-content").load(linkDetailURL);
+			});
+		}
+		
+	</script>
+</body>
+</html>
